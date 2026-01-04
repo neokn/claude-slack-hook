@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Build outputs
+dist/
+
+# Environment & secrets
+.env
+.env.local
+*.local.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/

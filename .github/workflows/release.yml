@@ -1,0 +1,131 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: darwin-arm64
+            artifact: claude-slack-hook-darwin-arm64
+          - os: macos-13
+            target: darwin-x64
+            artifact: claude-slack-hook-darwin-x64
+          - os: ubuntu-latest
+            target: linux-x64
+            artifact: claude-slack-hook-linux-x64
+          - os: ubuntu-24.04-arm
+            target: linux-arm64
+            artifact: claude-slack-hook-linux-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build binary
+        env:
+          ARTIFACT_NAME: ${{ matrix.artifact }}
+        run: |
+          bun build --compile --production ./src/index.ts --outfile "./dist/bin/${ARTIFACT_NAME}"
+
+      - name: Make executable
+        env:
+          ARTIFACT_NAME: ${{ matrix.artifact }}
+        run: chmod +x "./dist/bin/${ARTIFACT_NAME}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ./dist/bin/${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          find binaries -type f -name "claude-slack-hook-*" -exec mv {} release/ \;
+          cp hook/approval-hook.sh release/
+          chmod +x release/approval-hook.sh
+          ls -la release/
+
+      - name: Create checksums
+        run: |
+          cd release
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Determine version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          TAG_REF: ${{ github.ref }}
+        run: |
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "version=${INPUT_VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${TAG_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        env:
+          REPO_NAME: ${{ github.repository }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            release/*
+          body: |
+            ## Claude Slack Hook
+
+            ### Quick Install
+
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
+            ```
+
+            ### Manual Download
+            - `claude-slack-hook-darwin-arm64` - macOS Apple Silicon (M1/M2/M3)
+            - `claude-slack-hook-darwin-x64` - macOS Intel
+            - `claude-slack-hook-linux-x64` - Linux x64
+            - `claude-slack-hook-linux-arm64` - Linux ARM64
+
+            ### Setup
+            See README for Slack app configuration.
