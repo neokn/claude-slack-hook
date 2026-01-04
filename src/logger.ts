@@ -4,15 +4,11 @@ let logger: Logger;
 
 export function initLogger(level = 'info') {
   logger = pino({
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'SYS:standard',
-        ignore: 'pid,hostname',
-      },
-    },
     level,
+    formatters: {
+      level: (label) => ({ level: label }),
+    },
+    timestamp: pino.stdTimeFunctions.isoTime,
   });
   return logger;
 }
