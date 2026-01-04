@@ -14,26 +14,19 @@ curl -fsSL https://raw.githubusercontent.com/neokn/claude-slack-hook/main/instal
 
 ### 自行下載
 
-從 [Releases](https://github.com/neokn/claude-slack-hook/releases) 下載對應平台的 binary：
-
-| 平台 | 檔案 |
-|------|------|
-| macOS Apple Silicon (M1/M2/M3) | `claude-slack-hook-darwin-arm64` |
-| macOS Intel | `claude-slack-hook-darwin-x64` |
-| Linux x64 | `claude-slack-hook-linux-x64` |
-| Linux ARM64 | `claude-slack-hook-linux-arm64` |
+從 [Releases](https://github.com/neokn/claude-slack-hook/releases) 下載（僅支援 macOS Apple Silicon）：
 
 ```bash
 # 建立目錄
 mkdir -p ~/.claude/hooks/slack-approval/dist/bin
+mkdir -p ~/.claude/hooks/slack-approval/hook
 
-# 下載並安裝（以 macOS ARM64 為例）
-curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/claude-slack-hook-darwin-arm64 \
+# 下載 binary
+curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/claude-slack-hook \
   -o ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
 chmod +x ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
 
 # 下載 hook script
-mkdir -p ~/.claude/hooks/slack-approval/hook
 curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/approval-hook.sh \
   -o ~/.claude/hooks/slack-approval/hook/approval-hook.sh
 chmod +x ~/.claude/hooks/slack-approval/hook/approval-hook.sh

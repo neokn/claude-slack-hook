@@ -14,26 +14,19 @@ curl -fsSL https://raw.githubusercontent.com/neokn/claude-slack-hook/main/instal
 
 ### Manual Download
 
-Download the binary for your platform from [Releases](https://github.com/neokn/claude-slack-hook/releases):
-
-| Platform | File |
-|----------|------|
-| macOS Apple Silicon (M1/M2/M3) | `claude-slack-hook-darwin-arm64` |
-| macOS Intel | `claude-slack-hook-darwin-x64` |
-| Linux x64 | `claude-slack-hook-linux-x64` |
-| Linux ARM64 | `claude-slack-hook-linux-arm64` |
+Download from [Releases](https://github.com/neokn/claude-slack-hook/releases) (macOS Apple Silicon only):
 
 ```bash
-# Create directory
+# Create directories
 mkdir -p ~/.claude/hooks/slack-approval/dist/bin
+mkdir -p ~/.claude/hooks/slack-approval/hook
 
-# Download and install (macOS ARM64 example)
-curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/claude-slack-hook-darwin-arm64 \
+# Download binary
+curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/claude-slack-hook \
   -o ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
 chmod +x ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
 
 # Download hook script
-mkdir -p ~/.claude/hooks/slack-approval/hook
 curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/approval-hook.sh \
   -o ~/.claude/hooks/slack-approval/hook/approval-hook.sh
 chmod +x ~/.claude/hooks/slack-approval/hook/approval-hook.sh

@@ -1,13 +1,13 @@
 #!/bin/bash
 # Claude Code Hook - Slack Approval
-# 透過 SSE 串流等待 Slack 審批結果
+# Waits for Slack approval results via SSE streaming
 #
 # Usage:
 #   approval-hook.sh --bot-token <token> --app-token <token> --user-id <id> [--port <port>] [--log-level <level>] [--test]
 
 set -e
 
-# 解析參數
+# Parse arguments
 SLACK_BOT_TOKEN=""
 SLACK_APP_TOKEN=""
 SLACK_USER_ID=""
@@ -34,11 +34,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_DIR="$(dirname "$SCRIPT_DIR")"
 BIN_PATH="$SERVER_DIR/dist/bin/claude-slack-hook"
 
-# 調試日誌
+# Debug logging
 DEBUG_LOG="$SERVER_DIR/hook-debug.log"
 debug() { echo "[$(date '+%H:%M:%S')] $*" >> "$DEBUG_LOG"; }
 
-# 測試模式：直接執行 binary 並退出
+# Test mode: execute binary directly and exit
 if [[ -n "$TEST_MODE" ]]; then
     if [[ -z "$SLACK_BOT_TOKEN" || -z "$SLACK_APP_TOKEN" || -z "$SLACK_USER_ID" ]]; then
         echo "Usage: $0 --bot-token <token> --app-token <token> --user-id <id> --test"
@@ -53,23 +53,23 @@ if [[ -n "$TEST_MODE" ]]; then
         --test
 fi
 
-# 讀取 stdin
+# Read stdin
 INPUT=$(cat)
 HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // "PermissionRequest"')
 
-# 螢幕未鎖定時不處理
+# Skip processing if screen is not locked
 is_screen_locked() {
   local state=$(/usr/libexec/PlistBuddy -c "print :IOConsoleUsers:0:CGSSessionScreenIsLocked" /dev/stdin 2>/dev/null <<< "$(ioreg -n Root -d1 -a)")
   [ "$state" = "true" ]
 }
 is_screen_locked || exit 0
 
-# 檢查 server 是否運行
+# Check if server is running
 is_server_running() {
     curl -s --max-time 2 "${HEALTH_URL}" > /dev/null 2>&1
 }
 
-# 啟動 server
+# Start server
 start_server() {
     [[ ! -x "$BIN_PATH" ]] && {
         debug "Binary not found: $BIN_PATH"
@@ -96,30 +96,30 @@ start_server() {
     return 1
 }
 
-# 不輸出任何東西，讓 Claude Code 自己處理
+# Output nothing, let Claude Code handle it on its own
 fallback() {
     debug "fallback: $1"
     exit 0
 }
 
-# 確保 server 運行
+# Ensure server is running
 if ! is_server_running; then
-    start_server || fallback "無法啟動服務"
+    start_server || fallback "Failed to start server"
 fi
 
 debug "=== New request ==="
 debug "INPUT: $INPUT"
 
-# 發送請求並等待 SSE 結果
+# Send request and wait for SSE result
 RESULT=$(curl -sN \
     -X POST "${APPROVAL_URL}" \
     -H "Content-Type: application/json" \
     -H "Accept: text/event-stream" \
-    -d "${INPUT}" 2>&1) || fallback "連線中斷"
+    -d "${INPUT}" 2>&1) || fallback "Connection lost"
 
 debug "RESULT: $RESULT"
 
-# 解析 SSE 結果
+# Parse SSE result
 FINAL_DATA=$(echo "$RESULT" | grep -A1 '^event: result' | grep '^data:' | sed 's/^data: *//')
 
 debug "FINAL_DATA: $FINAL_DATA"
@@ -129,5 +129,5 @@ if [[ -n "$FINAL_DATA" ]] && echo "$FINAL_DATA" | jq -e . > /dev/null 2>&1; then
     echo "$FINAL_DATA"
 else
     debug "Invalid response, falling back"
-    fallback "無效回應"
+    fallback "Invalid response"
 fi
