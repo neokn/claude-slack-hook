@@ -3,7 +3,7 @@
 # Waits for Slack approval results via SSE streaming
 #
 # Usage:
-#   approval-hook.sh --bot-token <token> --app-token <token> --user-id <id> [--port <port>] [--log-level <level>] [--test]
+#   approval-hook.sh --bot-token <token> --app-token <token> --user-id <id> [--port <port>] [--log-level <level>] [--require-screen-lock true|false] [--test]
 
 set -e
 
@@ -14,6 +14,7 @@ SLACK_USER_ID=""
 APPROVAL_PORT="4698"
 LOG_LEVEL="info"
 TEST_MODE=""
+REQUIRE_SCREEN_LOCK="true"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -23,6 +24,7 @@ while [[ $# -gt 0 ]]; do
         --port|-p) APPROVAL_PORT="$2"; shift 2 ;;
         --log-level|-l) LOG_LEVEL="$2"; shift 2 ;;
         --test|-t) TEST_MODE="--test"; shift ;;
+        --require-screen-lock) REQUIRE_SCREEN_LOCK="$2"; shift 2 ;;
         *) shift ;;
     esac
 done
@@ -57,12 +59,14 @@ fi
 INPUT=$(cat)
 HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // "PermissionRequest"')
 
-# Skip processing if screen is not locked
+# Skip processing if screen is not locked (when require-screen-lock is enabled)
 is_screen_locked() {
   local state=$(/usr/libexec/PlistBuddy -c "print :IOConsoleUsers:0:CGSSessionScreenIsLocked" /dev/stdin 2>/dev/null <<< "$(ioreg -n Root -d1 -a)")
   [ "$state" = "true" ]
 }
-is_screen_locked || exit 0
+if [[ "$REQUIRE_SCREEN_LOCK" == "true" ]]; then
+  is_screen_locked || exit 0
+fi
 
 # Check if server is running
 is_server_running() {

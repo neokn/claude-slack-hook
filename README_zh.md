@@ -90,6 +90,7 @@ sh ~/.claude/hooks/slack-approval/hook/approval-hook.sh \
 | `--user-id` | `-u` | ✓ | 接收 DM 的 Slack User ID |
 | `--port` | `-p` | | 服務端口（預設 4698） |
 | `--log-level` | `-l` | | 日誌等級（預設 info） |
+| `--require-screen-lock` | | | 僅在螢幕上鎖時推送 Slack 通知（預設 true） |
 | `--test` | `-t` | | 測試模式，驗證連線後退出 |
 
 ### 工作流程

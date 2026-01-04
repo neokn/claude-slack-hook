@@ -90,6 +90,7 @@ Sends a test message to Slack. Click confirm to exit.
 | `--user-id` | `-u` | ✓ | Slack User ID to receive DMs |
 | `--port` | `-p` | | Service port (default: 4698) |
 | `--log-level` | `-l` | | Log level (default: info) |
+| `--require-screen-lock` | | | Only send Slack notification when screen is locked (default: true) |
 | `--test` | `-t` | | Test mode, exit after verification |
 
 ### Workflow
