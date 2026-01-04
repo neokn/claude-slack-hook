@@ -94,9 +94,10 @@ Sends a test message to Slack. Click confirm to exit.
 
 ### Workflow
 
-1. The approval service starts automatically when needed
-2. When using Claude Code, tool operations send a DM to Slack for approval
-3. Click **Approve** or **Deny** in Slack
+1. Check if screen is locked - if not, skip Slack approval (use local confirmation)
+2. The approval service starts automatically when needed
+3. When using Claude Code, tool operations send a DM to Slack for approval
+4. Click **Approve** or **Deny** in Slack
 
 ## Troubleshooting
 

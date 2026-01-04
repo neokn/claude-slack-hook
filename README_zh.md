@@ -94,9 +94,10 @@ sh ~/.claude/hooks/slack-approval/hook/approval-hook.sh \
 
 ### 工作流程
 
-1. 審核服務會在需要時自動啟動
-2. 使用 Claude Code 時，工具操作會發送 DM 到 Slack 等待審核
-3. 在 Slack 點擊 **Approve** 或 **Deny** 按鈕
+1. 檢查螢幕是否上鎖 - 若未上鎖則跳過 Slack 審核（使用本地確認）
+2. 審核服務會在需要時自動啟動
+3. 使用 Claude Code 時，工具操作會發送 DM 到 Slack 等待審核
+4. 在 Slack 點擊 **Approve** 或 **Deny** 按鈕
 
 ## 故障排除
 
