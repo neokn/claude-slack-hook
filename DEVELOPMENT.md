@@ -221,7 +221,7 @@ interface PendingRequest {
 ## Install from Source
 
 ```bash
-git clone https://github.com/anthropics/claude-slack-hook.git ~/.claude/hooks/slack-approval
+git clone https://github.com/neokn/claude-slack-hook.git ~/.claude/hooks/slack-approval
 cd ~/.claude/hooks/slack-approval
 bun install
 bun run compile
