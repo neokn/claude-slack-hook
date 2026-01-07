@@ -18,18 +18,12 @@ curl -fsSL https://raw.githubusercontent.com/neokn/claude-slack-hook/main/instal
 
 ```bash
 # 建立目錄
-mkdir -p ~/.claude/hooks/slack-approval/dist/bin
-mkdir -p ~/.claude/hooks/slack-approval/hook
+mkdir -p ~/.claude/hooks/slack-approval
 
 # 下載 binary
 curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/claude-slack-hook \
-  -o ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
-chmod +x ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
-
-# 下載 hook script
-curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/approval-hook.sh \
-  -o ~/.claude/hooks/slack-approval/hook/approval-hook.sh
-chmod +x ~/.claude/hooks/slack-approval/hook/approval-hook.sh
+  -o ~/.claude/hooks/slack-approval/claude-slack-hook
+chmod +x ~/.claude/hooks/slack-approval/claude-slack-hook
 ```
 
 ## 設定 Slack App
@@ -58,7 +52,7 @@ chmod +x ~/.claude/hooks/slack-approval/hook/approval-hook.sh
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/slack-approval/hook/approval-hook.sh --bot-token xoxb-... --app-token xapp-... --user-id U..."
+            "command": "~/.claude/hooks/slack-approval/claude-slack-hook --bot-token xoxb-... --app-token xapp-... --user-id U..."
           }
         ]
       }
@@ -72,7 +66,7 @@ chmod +x ~/.claude/hooks/slack-approval/hook/approval-hook.sh
 ### 測試連線
 
 ```bash
-sh ~/.claude/hooks/slack-approval/hook/approval-hook.sh \
+~/.claude/hooks/slack-approval/claude-slack-hook \
   --bot-token xoxb-xxx \
   --app-token xapp-xxx \
   --user-id U0123456789 \
@@ -81,6 +75,14 @@ sh ~/.claude/hooks/slack-approval/hook/approval-hook.sh \
 
 會發送測試訊息到 Slack，點擊確認後自動結束。
 
+### 停止執行中的程序
+
+```bash
+~/.claude/hooks/slack-approval/claude-slack-hook --stop
+```
+
+停止所有執行中的服務程序並清理 socket/PID 檔案。
+
 ### 參數說明
 
 | 參數 | 短參數 | 必填 | 說明 |
@@ -88,22 +90,26 @@ sh ~/.claude/hooks/slack-approval/hook/approval-hook.sh \
 | `--bot-token` | `-b` | ✓ | Bot User OAuth Token |
 | `--app-token` | `-a` | ✓ | App-Level Token |
 | `--user-id` | `-u` | ✓ | 接收 DM 的 Slack User ID |
-| `--port` | `-p` | | 服務端口（預設 4698） |
-| `--log-level` | `-l` | | 日誌等級（預設 info） |
-| `--require-screen-lock` | | | 僅在螢幕上鎖時推送 Slack 通知（預設 true） |
-| `--test` | `-t` | | 測試模式，驗證連線後退出 |
+| `--log-level` | `-l` | | 記錄等級（預設 info） |
+| `--only-screen-lock` | | | 僅在螢幕鎖定時發送 Slack 通知 |
+| `--test` | | | 測試模式，驗證連線後結束 |
+| `--stop` | | | 停止所有執行中的程序 |
 
 ### 工作流程
 
-1. 檢查螢幕是否上鎖 - 若未上鎖則跳過 Slack 審核（使用本地確認）
-2. 審核服務會在需要時自動啟動
-3. 使用 Claude Code 時，工具操作會發送 DM 到 Slack 等待審核
-4. 在 Slack 點擊 **Approve** 或 **Deny** 按鈕
+1. Claude Code 觸發 hook 進行權限請求
+2. 若設定 `--only-screen-lock` 且螢幕未鎖定，則跳過 Slack（使用本機確認）
+3. 背景服務會在首次請求時自動啟動
+4. 服務發送 DM 到 Slack，包含 Approve/Deny 按鈕
+5. 在 Slack 點擊 **Approve** 或 **Deny** 按鈕
+6. Claude Code 接收審核結果
 
-## 故障排除
+## 疑難排解
 
-- **服務未運行**：會回退到本地 Claude Code 確認
-- **檢查服務狀態**：`curl http://localhost:4698/health`
+- **服務未執行**：會退回本機 Claude Code 確認
+- **檢查執行中的程序**：`ps aux | grep claude-slack-hook`
+- **檢查 socket 檔案**：`ls -la $TMPDIR/claude-slack-approval/`
+- **停止所有程序**：`~/.claude/hooks/slack-approval/claude-slack-hook --stop`
 
 ## 開發
 

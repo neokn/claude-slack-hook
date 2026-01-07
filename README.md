@@ -17,19 +17,13 @@ curl -fsSL https://raw.githubusercontent.com/neokn/claude-slack-hook/main/instal
 Download from [Releases](https://github.com/neokn/claude-slack-hook/releases) (macOS Apple Silicon only):
 
 ```bash
-# Create directories
-mkdir -p ~/.claude/hooks/slack-approval/dist/bin
-mkdir -p ~/.claude/hooks/slack-approval/hook
+# Create directory
+mkdir -p ~/.claude/hooks/slack-approval
 
 # Download binary
 curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/claude-slack-hook \
-  -o ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
-chmod +x ~/.claude/hooks/slack-approval/dist/bin/claude-slack-hook
-
-# Download hook script
-curl -fsSL https://github.com/neokn/claude-slack-hook/releases/latest/download/approval-hook.sh \
-  -o ~/.claude/hooks/slack-approval/hook/approval-hook.sh
-chmod +x ~/.claude/hooks/slack-approval/hook/approval-hook.sh
+  -o ~/.claude/hooks/slack-approval/claude-slack-hook
+chmod +x ~/.claude/hooks/slack-approval/claude-slack-hook
 ```
 
 ## Slack App Setup
@@ -58,7 +52,7 @@ Add to `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/slack-approval/hook/approval-hook.sh --bot-token xoxb-... --app-token xapp-... --user-id U..."
+            "command": "~/.claude/hooks/slack-approval/claude-slack-hook --bot-token xoxb-... --app-token xapp-... --user-id U..."
           }
         ]
       }
@@ -72,7 +66,7 @@ Add to `~/.claude/settings.json`:
 ### Test Connection
 
 ```bash
-sh ~/.claude/hooks/slack-approval/hook/approval-hook.sh \
+~/.claude/hooks/slack-approval/claude-slack-hook \
   --bot-token xoxb-xxx \
   --app-token xapp-xxx \
   --user-id U0123456789 \
@@ -81,6 +75,14 @@ sh ~/.claude/hooks/slack-approval/hook/approval-hook.sh \
 
 Sends a test message to Slack. Click confirm to exit.
 
+### Stop Running Processes
+
+```bash
+~/.claude/hooks/slack-approval/claude-slack-hook --stop
+```
+
+Stops all running server processes and cleans up socket/PID files.
+
 ### Parameters
 
 | Parameter | Short | Required | Description |
@@ -88,22 +90,26 @@ Sends a test message to Slack. Click confirm to exit.
 | `--bot-token` | `-b` | ✓ | Bot User OAuth Token |
 | `--app-token` | `-a` | ✓ | App-Level Token |
 | `--user-id` | `-u` | ✓ | Slack User ID to receive DMs |
-| `--port` | `-p` | | Service port (default: 4698) |
 | `--log-level` | `-l` | | Log level (default: info) |
-| `--require-screen-lock` | | | Only send Slack notification when screen is locked (default: true) |
-| `--test` | `-t` | | Test mode, exit after verification |
+| `--only-screen-lock` | | | Only send Slack notification when screen is locked |
+| `--test` | | | Test mode, verify connection then exit |
+| `--stop` | | | Stop all running processes |
 
 ### Workflow
 
-1. Check if screen is locked - if not, skip Slack approval (use local confirmation)
-2. The approval service starts automatically when needed
-3. When using Claude Code, tool operations send a DM to Slack for approval
-4. Click **Approve** or **Deny** in Slack
+1. Claude Code triggers the hook with a permission request
+2. If `--only-screen-lock` is set and screen is not locked, skip Slack (use local confirmation)
+3. The background server starts automatically on first request
+4. The server sends a DM to Slack with Approve/Deny buttons
+5. Click **Approve** or **Deny** in Slack
+6. Claude Code receives the decision
 
 ## Troubleshooting
 
 - **Service not running**: Falls back to local Claude Code confirmation
-- **Check service status**: `curl http://localhost:4698/health`
+- **Check running processes**: `ps aux | grep claude-slack-hook`
+- **Check socket file**: `ls -la $TMPDIR/claude-slack-approval/`
+- **Stop all processes**: `~/.claude/hooks/slack-approval/claude-slack-hook --stop`
 
 ## Development
 

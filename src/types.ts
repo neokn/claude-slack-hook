@@ -28,11 +28,11 @@ export interface HookOutput {
 }
 
 /**
- * Pending SSE connection
+ * Pending socket connection
  */
 export interface PendingRequest {
   id: string;
-  res: import('express').Response;
+  socket: import('net').Socket;
   hookInput: HookInput;
   slackChannel: string;
   slackTs: string;

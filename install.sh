@@ -6,7 +6,7 @@ set -e
 
 REPO="neokn/claude-slack-hook"
 INSTALL_DIR="$HOME/.claude/hooks/slack-approval"
-BIN_DIR="$INSTALL_DIR/dist/bin"
+BIN_DIR="$INSTALL_DIR"
 
 # Colors
 RED='\033[0;31m'
@@ -46,7 +46,6 @@ install() {
 
     info "Creating install directory: ${INSTALL_DIR}"
     mkdir -p "$BIN_DIR"
-    mkdir -p "${INSTALL_DIR}/hook"
 
     # Download binary
     info "Downloading binary..."
@@ -56,15 +55,6 @@ install() {
     fi
     chmod +x "${BIN_DIR}/claude-slack-hook"
     info "Binary installed to: ${BIN_DIR}/claude-slack-hook"
-
-    # Download hook script
-    info "Downloading hook script..."
-    hook_url="https://github.com/${REPO}/releases/download/${version}/approval-hook.sh"
-    if ! curl -fsSL "$hook_url" -o "${INSTALL_DIR}/hook/approval-hook.sh"; then
-        error "Failed to download hook script: ${hook_url}"
-    fi
-    chmod +x "${INSTALL_DIR}/hook/approval-hook.sh"
-    info "Hook script installed to: ${INSTALL_DIR}/hook/approval-hook.sh"
 
     echo ""
     info "Installation complete!"
@@ -86,7 +76,7 @@ install() {
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/slack-approval/hook/approval-hook.sh --bot-token xoxb-... --app-token xapp-... --user-id U..."
+            "command": "~/.claude/hooks/slack-approval/claude-slack-hook --bot-token xoxb-... --app-token xapp-... --user-id U..."
           }
         ]
       }
@@ -94,6 +84,11 @@ install() {
   }
 }
 EOF
+    echo ""
+    echo "Optional flags:"
+    echo "  --only-screen-lock    Only send Slack notification when screen is locked"
+    echo "  --test                Test Slack connection"
+    echo "  --stop                Stop all running processes"
 }
 
 install

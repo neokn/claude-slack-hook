@@ -55,8 +55,6 @@ jobs:
 
       - name: Prepare release files
         run: |
-          cp hook/approval-hook.sh release/
-          chmod +x release/approval-hook.sh
           chmod +x release/claude-slack-hook
           ls -la release/
 
